@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubernetes-api-deployment
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: kubernetes-API
+  template:
+    metadata:
+      labels:
+        app: kubernetes-API
+        zone: prod
+        version: v1
+    spec:
+      containers:
+        - name: api
+          image:  shavetagirnagp/nagpdevops:kubernetes
+          ports:
+            - containerPort: 80
+          env:
+            - name: ConnectionStrings__DefaultConnection
+              valueFrom:
+                configMapKeyRef:
+                  name: connectionstring
+                  key: DefaultConnection

@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kubernetes-database-ss
+spec:
+  serviceName: kubernetes-database-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kubernetes-database
+  minReadySeconds: 5
+  template:
+    metadata:
+      labels:
+        app: kubernetes-database
+    spec:
+      containers:
+        - name: myapp-database
+          image: mcr.microsoft.com/mssql/server
+          ports:
+            - containerPort: 1433
+          env:
+            - name: "ACCEPT_EULA"
+              value: "Y"
+            - name: "SA_PASSWORD"
+              valueFrom:
+                secretKeyRef:
+                  name: usersdatabasesecret
+                  key: SA_PASSWORD
+            - name: "MSSQL_PID"
+              value: "Express"
+          volumeMounts:
+            - name: mssqldb
+              mountPath: /mssql/data
+            - name: secret-volume
+              mountPath: /etc/secretVolume  
+      volumes:
+      - name: mssqldb
+        persistentVolumeClaim:
+          claimName: kubernetes-project-claim  
+      - name: secret-volume
+        secret:
+          secretName: usersdatabasesecret 
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Delete  
